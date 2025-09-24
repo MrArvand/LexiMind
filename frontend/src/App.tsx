@@ -30,7 +30,6 @@ export default function App() {
 	const [result, setResult] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [copied, setCopied] = useState(false);
-	const [full, setFull] = useState(true);
 
 	const disabled = useMemo(() => loading || input.trim().length === 0, [loading, input]);
 
@@ -70,19 +69,16 @@ export default function App() {
 			</header>
 
 			{/* Output panel at top */}
-			<section className={`rounded-lg border shadow-sm bg-white/50 backdrop-blur-sm ${full ? 'p-4 md:p-6' : 'p-3'} dark:bg-black/30`}> 
+			<section className={`rounded-lg border shadow-sm bg-white/50 backdrop-blur-sm p-4 md:p-6 dark:bg-black/30`}> 
 				<div className="flex items-center justify-between gap-3 border-b pb-3 mb-3">
 					<div className="text-sm md:text-base font-medium">Output</div>
 					<div className="flex items-center gap-2">
 						<button onClick={copyOutput} disabled={!result} className="px-2 py-1 text-sm rounded-md border">
 							{copied ? 'Copied' : 'Copy'}
 						</button>
-						<button onClick={() => setFull((v) => !v)} className="px-2 py-1 text-sm rounded-md border">
-							{full ? 'Compact' : 'Fullscreen'}
-						</button>
 					</div>
 				</div>
-				<div className={`prose prose-slate max-w-none ${full ? 'min-h-[40vh]' : 'max-h-[28rem] overflow-auto'} dark:prose-invert`}
+				<div className={`prose prose-slate max-w-none min-h-[48vh] dark:prose-invert`}
 					dangerouslySetInnerHTML={{ __html: error ? `<div class='text-red-500'>${error}</div>` : md.render(result || 'Output will appear here...') }}
 				/>
 			</section>
@@ -113,7 +109,7 @@ export default function App() {
 					value={input}
 					onChange={(e) => setInput(e.target.value)}
 					placeholder="Paste text or code here..."
-					className="w-full min-h-[32vh] md:min-h-[40vh] p-3 rounded-md border"
+					className="w-full min-h-[28vh] md:min-h-[32vh] p-3 rounded-md border"
 				/>
 			</section>
 		</div>
