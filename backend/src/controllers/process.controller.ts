@@ -9,13 +9,13 @@ export async function processHandler(req: Request, res: Response) {
 	if (!parse.success) {
 		return res.status(400).json({ error: 'Invalid request', details: parse.error.flatten() });
 	}
-	const { input, mode, detail } = parse.data;
+	const { input, mode, detail, language } = parse.data;
 
 	const resolvedMode = mode === 'auto' ? detectInputType(input) : (mode as 'text' | 'code');
 
 	const prompt = resolvedMode === 'code'
-		? buildCodeExplainPrompt(input, detail)
-		: buildTextSummaryPrompt(input, detail);
+		? buildCodeExplainPrompt(input, detail, language)
+		: buildTextSummaryPrompt(input, detail, language);
 
 	const { text } = await chatComplete({
 		messages: [
@@ -28,6 +28,7 @@ export async function processHandler(req: Request, res: Response) {
 	return res.json({
 		mode: resolvedMode,
 		detail,
+		language,
 		result: text,
 	});
 }

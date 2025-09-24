@@ -1,24 +1,49 @@
-import { useMemo, useMemo as _u, useState } from 'react';
+import { useMemo, useState } from 'react';
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 
+function escapeHtml(text: string): string {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 const md = new MarkdownIt({
-	highlight: (str, lang) => {
+	highlight: (str: string, lang: string): string => {
 		if (lang && hljs.getLanguage(lang)) {
 			try {
 				return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
-			} catch {}
+			} catch {
+				// no-op: fall back to escaped code block
+			}
 		}
-		return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+		return `<pre class="hljs"><code>${escapeHtml(str)}</code></pre>`;
 	},
 	linkify: true,
 	breaks: true,
 });
 
+function unwrapFencedMarkdown(text: string): string {
+	const fence = /^```([a-zA-Z0-9_-]*)\n([\s\S]*?)\n```\s*$/;
+	const match = text.trim().match(fence);
+	if (!match) return text;
+	const lang = (match[1] || '').toLowerCase();
+	const inner = match[2] || '';
+	if (lang === 'markdown' || lang === 'md' || lang === 'gfm' || lang === '') {
+		return inner;
+	}
+	return text;
+}
+
 type Detail = 'short' | 'medium' | 'detailed';
 
 type Mode = 'auto' | 'text' | 'code';
+
+type Language = 'en' | 'fa';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5050';
 
@@ -26,6 +51,7 @@ export default function App() {
 	const [input, setInput] = useState('');
 	const [mode, setMode] = useState<Mode>('auto');
 	const [detail, setDetail] = useState<Detail>('medium');
+	const [language, setLanguage] = useState<Language>('en');
 	const [loading, setLoading] = useState(false);
 	const [result, setResult] = useState('');
 	const [error, setError] = useState<string | null>(null);
@@ -41,13 +67,14 @@ export default function App() {
 			const resp = await fetch(`${API_BASE}/api/process`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ input, mode, detail }),
+				body: JSON.stringify({ input, mode, detail, language }),
 			});
 			const data = await resp.json();
 			if (!resp.ok) throw new Error(data?.error || 'Request failed');
 			setResult(data.result || '');
-		} catch (e: any) {
-			setError(e.message || 'Unexpected error');
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : String(e);
+			setError(msg || 'Unexpected error');
 		} finally {
 			setLoading(false);
 		}
@@ -58,8 +85,14 @@ export default function App() {
 			await navigator.clipboard.writeText(result);
 			setCopied(true);
 			setTimeout(() => setCopied(false), 1500);
-		} catch {}
+		} catch {
+			// no-op
+		}
 	}
+
+	const rendered = error
+		? `<div class='text-red-500'>${error}</div>`
+		: md.render(unwrapFencedMarkdown(result || 'Output will appear here...'));
 
 	return (
 		<div className="min-h-screen max-w-6xl mx-auto p-4 md:p-6 space-y-4">
@@ -69,7 +102,7 @@ export default function App() {
 			</header>
 
 			{/* Output panel at top */}
-			<section className={`rounded-lg border shadow-sm bg-white/50 backdrop-blur-sm p-4 md:p-6 dark:bg-black/30`}> 
+			<section className="rounded-lg border shadow-sm bg-white/50 backdrop-blur-sm p-4 md:p-6 dark:bg-black/30"> 
 				<div className="flex items-center justify-between gap-3 border-b pb-3 mb-3">
 					<div className="text-sm md:text-base font-medium">Output</div>
 					<div className="flex items-center gap-2">
@@ -78,8 +111,8 @@ export default function App() {
 						</button>
 					</div>
 				</div>
-				<div className={`prose prose-slate max-w-none min-h-[48vh] dark:prose-invert`}
-					dangerouslySetInnerHTML={{ __html: error ? `<div class='text-red-500'>${error}</div>` : md.render(result || 'Output will appear here...') }}
+				<div className="prose prose-slate max-w-none min-h-[56vh] dark:prose-invert" dir={language === 'fa' ? 'rtl' : 'ltr'}
+					dangerouslySetInnerHTML={{ __html: rendered }}
 				/>
 			</section>
 
@@ -100,6 +133,12 @@ export default function App() {
 						<option value="detailed">Detailed</option>
 					</select>
 
+					<label className="text-sm">Language</label>
+					<select value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="px-2 py-1 rounded-md border">
+						<option value="en">English</option>
+						<option value="fa">Persian</option>
+					</select>
+
 					<button onClick={submit} disabled={disabled} className="px-4 py-2 rounded-md bg-indigo-600 text-white disabled:opacity-50">
 						{loading ? 'Processing...' : 'Generate'}
 					</button>
@@ -110,6 +149,7 @@ export default function App() {
 					onChange={(e) => setInput(e.target.value)}
 					placeholder="Paste text or code here..."
 					className="w-full min-h-[28vh] md:min-h-[32vh] p-3 rounded-md border"
+					dir={language === 'fa' ? 'rtl' : 'ltr'}
 				/>
 			</section>
 		</div>
