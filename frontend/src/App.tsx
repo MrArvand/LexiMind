@@ -94,6 +94,8 @@ export default function App() {
 		? `<div class='text-red-500'>${error}</div>`
 		: md.render(unwrapFencedMarkdown(result || 'Output will appear here...'));
 
+	const selectCls = "px-2 py-1 rounded-md border bg-black text-white border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+
 	return (
 		<div className="min-h-screen max-w-6xl mx-auto p-4 md:p-6 space-y-4">
 			<header className="flex items-center justify-between">
@@ -120,21 +122,21 @@ export default function App() {
 			<section className="rounded-lg border shadow-sm p-4 md:p-6 space-y-4 bg-white/50 backdrop-blur-sm dark:bg-black/30">
 				<div className="flex flex-wrap gap-3 items-center">
 					<label className="text-sm">Mode</label>
-					<select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className="px-2 py-1 rounded-md border">
+					<select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className={selectCls}>
 						<option value="auto">Auto</option>
 						<option value="text">Text</option>
 						<option value="code">Code</option>
 					</select>
 
 					<label className="text-sm">Detail</label>
-					<select value={detail} onChange={(e) => setDetail(e.target.value as Detail)} className="px-2 py-1 rounded-md border">
+					<select value={detail} onChange={(e) => setDetail(e.target.value as Detail)} className={selectCls}>
 						<option value="short">Short</option>
 						<option value="medium">Medium</option>
 						<option value="detailed">Detailed</option>
 					</select>
 
 					<label className="text-sm">Language</label>
-					<select value={language} onChange={(e) => setLanguage(e.target.value as Language)} className="px-2 py-1 rounded-md border">
+					<select value={language} onChange={(e) => setLanguage(e.target.value as Language)} className={selectCls}>
 						<option value="en">English</option>
 						<option value="fa">Persian</option>
 					</select>
