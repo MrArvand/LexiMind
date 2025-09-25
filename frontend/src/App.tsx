@@ -69,6 +69,13 @@ export default function App() {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ input, mode, detail, language }),
 			});
+
+			const contentType = resp.headers.get('content-type') || '';
+			if (!contentType.includes('application/json')) {
+				const text = await resp.text();
+				throw new Error(`Unexpected response (status ${resp.status}). Check API URL.\n\nPreview:\n${text.slice(0, 500)}`);
+			}
+
 			const data = await resp.json();
 			if (!resp.ok) throw new Error(data?.error || 'Request failed');
 			setResult(data.result || '');
