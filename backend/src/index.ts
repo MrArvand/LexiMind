@@ -22,6 +22,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 const port = config.port;
-app.listen(port, () => {
-	console.log(`Server listening on http://localhost:${port}`);
+const host = '0.0.0.0';
+app.listen(port, host, () => {
+	console.log(`Server listening on http://${host}:${port}`);
 });

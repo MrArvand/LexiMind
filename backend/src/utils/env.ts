@@ -9,8 +9,15 @@ function getEnv(name: string, fallback?: string): string {
 	return value;
 }
 
+function getPort(): number {
+	const raw = process.env.PORT;
+	const normalized = raw && raw.trim() !== '' ? raw : '5050';
+	const port = parseInt(normalized, 10);
+	return Number.isFinite(port) && port > 0 ? port : 5050;
+}
+
 export const config = {
-	port: Number(process.env.PORT ?? '5050'),
+	port: getPort(),
 	openrouter: {
 		apiKey: getEnv('OPENROUTER_API_KEY'),
 		baseUrl: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
